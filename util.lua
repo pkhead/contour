@@ -33,7 +33,7 @@ function util.execute(programName, ...)
     end
 end
 
-local rng = love.math.newRandomGenerator()
+local rng = love.math.newRandomGenerator(os.time())
 local possibleChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 function util.generateUid()
     local t = {}

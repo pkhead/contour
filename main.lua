@@ -267,7 +267,7 @@ local function processContent()
                     if success then break end
                 end
 
-                newDb.uids[path] = util.generateUid()
+                newDb.uids[path] = uid
             end
         end
 
