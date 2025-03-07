@@ -25,8 +25,12 @@ function util.execute(programName, ...)
     for i=1, #args do
         args[i] = "\"" .. args[i] .. "\""
     end
-
-    os.execute(table.concat(args, " "))
+    
+    if jit.os == "Windows" then
+        os.execute("\"" .. table.concat(args, " ") .. "\"")
+    else
+        os.execute(table.concat(args, " "))
+    end
 end
 
 return util
