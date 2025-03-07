@@ -125,6 +125,8 @@ local fileIndex = 1
 
 local dbList = {"return {\n"}
 
+nativefs.createDirectory("contour/export")
+
 for procId, globs in pairs(conf.processors) do
     local processor = require("contour.processors." .. procId)
 
