@@ -252,6 +252,21 @@ local function processContent()
         -- assign a uid for each file if it doesn't already exist
         for _, path in pairs(paths) do
             if newDb.uids[path] == nil then
+                local uid
+                while true do
+                    uid = util.generateUid()
+
+                    local success = true
+                    for _, testUid in pairs(newDb.uids) do
+                        if uid == testUid then
+                            success = false
+                            break
+                        end
+                    end
+
+                    if success then break end
+                end
+
                 newDb.uids[path] = util.generateUid()
             end
         end
@@ -265,6 +280,18 @@ local function processContent()
                 newDb.map[path] = outPath
             end
         end
+    end
+
+    -- remove uids that no longer are referenced
+    local uidsToRemove = {}
+    for path, uid in pairs(newDb.uids) do
+        if newDb.map[path] == nil then
+            table.insert(uidsToRemove, path)
+        end
+    end
+
+    for _, path in pairs(uidsToRemove) do
+        newDb.uids[path] = nil
     end
 
     nativefs.write("contour/db.lua", "return " .. serialize(newDb))
