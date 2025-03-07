@@ -9,8 +9,8 @@ local contour = {}
 local function getPath(path)
     path = Path.normalize(path)
 
-    if db[path] ~= nil or db["/" .. path] ~= nil then
-        return db[path]
+    if db.map[path] ~= nil or db.map["/" .. path] ~= nil then
+        return db.map[path]
     else
         return path
     end
@@ -21,7 +21,7 @@ end
 ---@return boolean status True if the path is mapped, false if not.
 local function isMapped(path)
     path = Path.normalize(path)
-    return db[path] ~= nil or db["/" .. path] ~= nil
+    return db.map[path] ~= nil or db.map["/" .. path] ~= nil
 end
 
 contour.getPath = getPath
