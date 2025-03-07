@@ -3,9 +3,11 @@
 --    lovec contour
 --
 -- i.e., with cwd being the project root directory
+local VERSION = "1.2"
 
 local nativefs = require("nativefs")
 local pathm = require("path")
+local util = require("util")
 
 ---@type fun(globDesc: string): fun(v: string)
 local createGlobChecker
@@ -116,45 +118,196 @@ do
     end
 end
 
+---@param str string
+---@return string
 local function escapeString(str)
-    return string.gsub(str, "\"", "\\\"")
+    local res = string.gsub(str, "\"", "\\\"")
+    return res
 end
 
-local conf = require("contour.conconf")
-local fileIndex = 1
+---@type fun(value: any): string
+local serialize
+do
+    local tinsert = table.insert
+    local tab = "    "
 
-local dbList = {"return {\n"}
+    local function rec(out, indent, t)
+        if type(t) == "function" or type(t) == "userdata" or type(t) == "thread" then
+            error(("%s is not serializable"):format(type(t)))
+        end
 
-nativefs.createDirectory("contour/export")
+        if type(t) == "table" then
+            tinsert(out, "{\n")
+            local indent2 = indent .. tab
+            
+            -- numeric list
+            if t[1] ~= nil then
+                for i, v in ipairs(t) do
+                    tinsert(out, indent2)
+                    rec(out, indent2, v)
+                    tinsert(out, ",\n")
+                end
+            else
+                local keys = {}
+                for k, _ in pairs(t) do
+                    table.insert(keys, k)
+                end
+                table.sort(keys)
 
-for procId, globs in pairs(conf.processors) do
-    local processor = require("contour.processors." .. procId)
+                for _, k in ipairs(keys) do
+                    local v = t[k]
+                    if type(k) == "table" then
+                        error("table is not serializable as a key")
+                    end
 
-    local paths = {}
-    for _, assetDir in ipairs(conf.assetDirectories) do
-        for _, glob in ipairs(globs) do
-            for _, v in ipairs(evalGlob(assetDir, glob)) do
-                paths[#paths+1] = v
+                    tinsert(out, indent2)
+                    tinsert(out, "[")
+                    rec(out, 0, k)
+                    tinsert(out, "] = ")
+                    rec(out, indent2, v)
+                    tinsert(out, ",\n")
+                end
+            end
+
+            tinsert(out, indent)
+            tinsert(out, "}")
+        
+        elseif type(t) == "string" then
+            table.insert(out, "\"")
+            table.insert(out, escapeString(t))
+            table.insert(out, "\"")
+        else
+            table.insert(out, tostring(t))
+        end
+    end
+
+    function serialize(value)
+        local out = {}
+        rec(out, "", value)
+        return table.concat(out)
+    end
+end
+
+local function tfind(t, v)
+    for i, testV in pairs(t) do
+        if testV == v then
+            return i
+        end
+    end
+    return nil
+end
+
+local exportDirectory = "contour/export"
+
+local function processContent()
+    local conf = require("contour.conconf")
+
+    local oldDbChunk = nativefs.load("contour/db.lua")
+    local oldDb = nil
+    if oldDbChunk ~= nil then
+        oldDb = oldDbChunk()
+    end
+
+    local newDb = {
+        map = {}
+    }
+
+    if oldDb ~= nil then
+        newDb.uids = oldDb.uids
+    else
+        newDb.uids = {}
+    end
+
+    nativefs.createDirectory(exportDirectory)
+
+    -- make sure files that have already been processed are always reprocessed before
+    -- newly created files
+    ---@type fun(a: string, b: string): boolean
+    local function pathSortFunc(a, b)
+        local aUid = newDb.uids[a]
+        local bUid = newDb.uids[b]
+        return aUid < bUid
+    end
+
+    -- ensure processers are ran in a specific order
+    local procOrder = {}
+    for procId, _ in pairs(conf.processors) do
+        table.insert(procOrder, procId)
+    end
+    table.sort(procOrder)
+
+    for _, procId in ipairs(procOrder) do
+        local globs = conf.processors[procId]
+        local processor = require("contour.processors." .. procId)
+
+        local paths = {}
+        for _, assetDir in ipairs(conf.assetDirectories) do
+            for _, glob in ipairs(globs) do
+                for _, v in ipairs(evalGlob(assetDir, glob)) do
+                    table.insert(paths, v)
+                end
+            end
+        end
+
+        -- assign a uid for each file if it doesn't already exist
+        for _, path in pairs(paths) do
+            if newDb.uids[path] == nil then
+                newDb.uids[path] = util.generateUid()
+            end
+        end
+
+        table.sort(paths, pathSortFunc)
+
+        for _, path in ipairs(paths) do
+            local outPath = processor(path, exportDirectory, newDb.uids[path])
+
+            if outPath ~= nil then
+                newDb.map[path] = outPath
             end
         end
     end
 
-    for _, path in pairs(paths) do
-        local outPath = processor(path, "contour/export", fileIndex)
-        fileIndex = fileIndex + 1
-
-        if outPath ~= nil then
-            dbList[#dbList+1] = "\t[\""
-            dbList[#dbList+1] = path
-            dbList[#dbList+1] = "\"] = \""
-            dbList[#dbList+1] = escapeString(outPath)
-            dbList[#dbList+1] = "\",\n"
-        end
-    end
+    nativefs.write("contour/db.lua", "return " .. serialize(newDb))
 end
 
-dbList[#dbList+1] = "}"
+local function removeDirectory(dirPath)
+    if nativefs.getInfo(dirPath) == nil then return end
 
-nativefs.write("contour/db.lua", table.concat(dbList))
+    for _, name in pairs(nativefs.getDirectoryItems(dirPath)) do
+        local path = dirPath .. "/" .. name
+        local info = nativefs.getInfo(path)
 
-os.exit(0)
+        if info.type == "directory" then
+            removeDirectory(path)
+        else
+            os.remove(path)
+        end
+    end
+
+    if jit.os == "Windows" then
+        dirPath = string.gsub(dirPath, "/", "\\")
+    end
+    os.execute("rmdir " .. dirPath)
+end
+
+function love.load(args)
+    if args[1] ~= nil then
+        if args[1] == "--help" or args[1] == "-h" or args[1] == "/?" or args[1] == "help" then
+            local helpText = love.filesystem.read("string", "help.txt")
+            io.write(helpText)
+            io.write("\n")
+
+        elseif args[1] == "--version" or args[1] == "-v" then
+            io.write(VERSION)
+            io.write("\n")
+
+        elseif args[1] == "clean" then
+            nativefs.remove("contour/db.lua")
+            removeDirectory(exportDirectory)
+        end
+    else
+        processContent()
+    end
+
+    os.exit(0)
+end

@@ -1,0 +1,14 @@
+contour - love2d content pipeline tool
+
+usage:
+	contour [options]
+	contour command [options]
+
+
+commands:
+	(none)		process content
+	clean		clean exported files
+	
+options:
+	--help -h	show this help message
+	--version -v	write version to stdout

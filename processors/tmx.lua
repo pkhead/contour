@@ -8,8 +8,8 @@ end
 
 tiled = os.getenv("TILED") or tiled
 
-return function(inPath, exportDir, fileIndex)
-    local outPath = ("%s/%05d_%s.lua"):format(exportDir, fileIndex, path.getNameWithoutExtension(inPath))
+return function(inPath, exportDir, fileUid)
+    local outPath = ("%s/%s_%s.lua"):format(exportDir, fileUid, path.getNameWithoutExtension(inPath))
     
     if util.isOutOfDate(inPath, outPath) then
         print(("[TMX] %s"):format(outPath))

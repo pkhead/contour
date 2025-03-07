@@ -33,4 +33,14 @@ function util.execute(programName, ...)
     end
 end
 
+local rng = love.math.newRandomGenerator()
+local possibleChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+function util.generateUid()
+    local t = {}
+    for i=1, 8 do
+        t[i] = string.byte(possibleChars, rng:random(1, string.len(possibleChars)))
+    end
+    return string.char(unpack(t))
+end
+
 return util
