@@ -19,10 +19,13 @@ conconf.lua returns a table with a simple format:
 ```lua
 {
     assetDirectories: string[],
+    exportDirectory: string,
     processors: {[string] = globs[]}
 }
 ```
 The `assetDirectories` table is a list of all directories that contour will recursively search through when invoked. In the pre-packaged conconf.lua, it is set to read from the directory named "assets".
+
+The `exportDirectory` value is the path to the export directory. It must be within the LÖVE game directory. It is preset to contour/export.
 
 The `processors` table is a key-value table:
 - The keys are the module names of each processor in the `processors` namespace. So, for example, if a key is `tmx`, contour will require `processors.tmx`, which maps to the file `contour/processors/tmx.lua`.
