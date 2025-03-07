@@ -3,7 +3,7 @@
 --    lovec contour
 --
 -- i.e., with cwd being the project root directory
-local VERSION = "1.2"
+local VERSION = "1.0"
 
 local nativefs = require("nativefs")
 local pathm = require("path")
