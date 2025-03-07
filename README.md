@@ -1,6 +1,8 @@
 # contour
 A framework for creating "content pipelines" in LÖVE projects. This allows offline processing of certain asset files to a transformed file, and makes runtime code that attempts to load the original asset file to load the transformed file instead.
 
+Please report any issues on Issues, or anywhere else like on Discord if you'd rather do that.
+
 # Usage
 Clone this repository into the root directory of your LÖVE project. To run the tool, run `love contour` in a terminal. It has to be from the root directory in order for it to work properly!
 
@@ -46,4 +48,4 @@ During runtime, the contour module should be available using `require("contour")
 
 - `isMapped(path: string): bool`: Check if a source file is mapped--that is, processed by contour with a output file associated with it.
 - `getPath(path: string): void`: If the given source file is mapped, returns the preprocessed file. Otherwise, it returns the given path.
-- `exportApi(): void` Hooks the love.filesystem functions to pass paths through contour as appropriate.
+- `exportApi(): void` Hooks love functions to pass paths through contour.
