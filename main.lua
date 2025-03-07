@@ -118,76 +118,6 @@ do
     end
 end
 
----@param str string
----@return string
-local function escapeString(str)
-    local res = string.gsub(str, "\"", "\\\"")
-    return res
-end
-
----@type fun(value: any): string
-local serialize
-do
-    local tinsert = table.insert
-    local tab = "    "
-
-    local function rec(out, indent, t)
-        if type(t) == "function" or type(t) == "userdata" or type(t) == "thread" then
-            error(("%s is not serializable"):format(type(t)))
-        end
-
-        if type(t) == "table" then
-            tinsert(out, "{\n")
-            local indent2 = indent .. tab
-            
-            -- numeric list
-            if t[1] ~= nil then
-                for i, v in ipairs(t) do
-                    tinsert(out, indent2)
-                    rec(out, indent2, v)
-                    tinsert(out, ",\n")
-                end
-            else
-                local keys = {}
-                for k, _ in pairs(t) do
-                    table.insert(keys, k)
-                end
-                table.sort(keys)
-
-                for _, k in ipairs(keys) do
-                    local v = t[k]
-                    if type(k) == "table" then
-                        error("table is not serializable as a key")
-                    end
-
-                    tinsert(out, indent2)
-                    tinsert(out, "[")
-                    rec(out, 0, k)
-                    tinsert(out, "] = ")
-                    rec(out, indent2, v)
-                    tinsert(out, ",\n")
-                end
-            end
-
-            tinsert(out, indent)
-            tinsert(out, "}")
-        
-        elseif type(t) == "string" then
-            table.insert(out, "\"")
-            table.insert(out, escapeString(t))
-            table.insert(out, "\"")
-        else
-            table.insert(out, tostring(t))
-        end
-    end
-
-    function serialize(value)
-        local out = {}
-        rec(out, "", value)
-        return table.concat(out)
-    end
-end
-
 local function tfind(t, v)
     for i, testV in pairs(t) do
         if testV == v then
@@ -197,10 +127,12 @@ local function tfind(t, v)
     return nil
 end
 
-local exportDirectory = "contour/export"
+local conf = require("contour.conconf")
+local exportDirectory = assert(conf.exportDirectory, "conconf.lua: missing exportDirectory string")
+assert(conf.assetDirectories, "conconf.lua: missing assetDirectories table")
+assert(conf.processors, "conconf.lua: missing processors table")
 
 local function processContent()
-    local conf = require("contour.conconf")
 
     local oldDbChunk = nativefs.load("contour/db.lua")
     local oldDb = nil
@@ -294,7 +226,7 @@ local function processContent()
         newDb.uids[path] = nil
     end
 
-    nativefs.write("contour/db.lua", "return " .. serialize(newDb))
+    nativefs.write("contour/db.lua", "return " .. util.serialize(newDb))
 end
 
 local function removeDirectory(dirPath)
