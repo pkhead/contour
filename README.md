@@ -31,15 +31,15 @@ The `processors` table is a key-value table:
 ### Creating processors
 Each processor is a Lua module located under the `processors` namespace. Each module must return a function with the following signature:
 ```
-fun(inPath: string, exportDir: string, fileId: integer): string?
+fun(inPath: string, exportDir: string, fileUid: string): string?
 ```
 1. **inPath:** The path to the source file.
 2. **exportDir:** The path to the export directory,
-3. **fileId:** A number used to uniquely identify the source file
+3. **fileUid:** A UID used to uniquely identify the source file
 
 The function must then return either nil or the path to the output file that the processor created.
 
-The `fileId` argument is useful for when you have more than one source asset with the same name, but in potentially different directories, and you don't want to have to mirror the directory structure under the export directory -- in this situation, you can prepend the number to the output file name.
+The `fileUid` argument is useful for when you have more than one source asset with the same name, but in potentially different directories, and you don't want to have to mirror the directory structure under the export directory -- in this situation, you can prepend the UID to the output file name.
 
 There are also a few available modules: util, path, and [nativefs](https://github.com/EngineerSmith/nativefs).
 
