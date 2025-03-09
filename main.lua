@@ -3,7 +3,7 @@
 --    lovec contour
 --
 -- i.e., with cwd being the project root directory
-local VERSION = "1.0"
+local VERSION = "1.1.0"
 
 local nativefs = require("nativefs")
 local pathm = require("path")
@@ -132,13 +132,23 @@ local exportDirectory = assert(conf.exportDirectory, "conconf.lua: missing expor
 assert(conf.assetDirectories, "conconf.lua: missing assetDirectories table")
 assert(conf.processors, "conconf.lua: missing processors table")
 
-local function processContent()
+---@class Database
+---@field map {[string]: string}
+---@field uids {[string]: string}
 
+---@return Database?
+local function loadDatabase()
     local oldDbChunk = nativefs.load("contour/db.lua")
     local oldDb = nil
     if oldDbChunk ~= nil then
         oldDb = oldDbChunk()
     end
+
+    return oldDb
+end
+
+local function processContent()
+    local oldDb = loadDatabase()
 
     local newDb = {
         map = {}
@@ -259,6 +269,20 @@ function love.load(args)
         elseif args[1] == "--version" or args[1] == "-v" then
             io.write(VERSION)
             io.write("\n")
+        
+        elseif args[1] == "list-mapped" then
+            local db = loadDatabase()
+            if db then 
+                local keys = {}
+                for k, v in pairs(db.map) do
+                    table.insert(keys, k)
+                end
+
+                for _, k in ipairs(keys) do
+                    io.write(k)
+                    io.write("\n")
+                end
+            end
 
         elseif args[1] == "clean" then
             nativefs.remove("contour/db.lua")

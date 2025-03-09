@@ -4,10 +4,10 @@ usage:
 	contour [options]
 	contour command [options]
 
-
 commands:
 	(none)		process content
 	clean		clean exported files
+	list-mapped	list files that were mapped
 	
 options:
 	--help -h	show this help message
