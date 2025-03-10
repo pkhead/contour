@@ -17,13 +17,18 @@ git submodule add https://github.com/contour
 ```
 With this method, to run contour in a terminal, you must type `love contour` (or `lovec contour` on Windows).
 
-### Add contour to PATH
-You may clone contour anywhere you'd like, and add its directory to your system or user PATH.
+### Add contour to PATH (Windows)
+You may clone contour anywhere you'd like, and add its directory to your system or user PATH. You can install it to %LOCALAPPDATA%\Programs if you don't to deal with administrator permissions.
 
-> [!TIP]
-> On Windows, you can install it to %LOCALAPPDATA%\Programs if you don't to deal with administrator permissions.
->
-> If you are on Linux or MacOS, you should also run `chmod +x contour.sh` for it to work properly.
+With this method, to run contour in a terminal, you simply type `contour`.
+
+### Create shell script (Linux)
+You may clone contour anywhere you'd like. Then in a directory located in PATH, create a shell script named `contour` (no extension) with the contents:
+```bash
+#!/usr/bin/env bash
+love [path to contour directory] $@
+```
+Afterwards, run `chmod +x [path to shell script]`.
 
 With this method, to run contour in a terminal, you simply type `contour`.
 
