@@ -269,17 +269,33 @@ local function copyFileToProject(srcFile, destFile)
 end
 
 function love.load(args)
-    if args[1] ~= nil then
-        if args[1] == "--help" or args[1] == "-h" or args[1] == "/?" or args[1] == "help" then
+    -- dumb command parser
+    local scStart = nil
+    local i=1
+    while i <= #args do
+        if args[i] == "-C" then
+            nativefs.setWorkingDirectory(args[i+1])
+            i=i+2
+        else
+            if scStart == nil then
+                scStart = i
+            end
+
+            i=i+1
+        end
+    end
+
+    if scStart ~= nil then
+        if args[scStart] == "--help" or args[scStart] == "-h" or args[scStart] == "/?" or args[scStart] == "help" then
             local helpText = love.filesystem.read("string", "tooldata/help.txt")
             io.write(helpText)
             io.write("\n")
 
-        elseif args[1] == "--version" or args[1] == "-v" then
+        elseif args[scStart] == "--version" or args[scStart] == "-v" then
             io.write(VERSION)
             io.write("\n")
         
-        elseif args[1] == "init" then
+        elseif args[scStart] == "init" then
             -- create directory structure
             nativefs.createDirectory("contour")
             nativefs.createDirectory("contour/processors")
@@ -295,7 +311,7 @@ function love.load(args)
                 copyFileToProject("tooldata/default-conf.lua", "contour/conconf.lua")
             end
         
-        elseif args[1] == "list-mapped" then
+        elseif args[scStart] == "list-mapped" then
             local db = loadDatabase(loadConfig())
             if db then 
                 local keys = {}
@@ -309,9 +325,12 @@ function love.load(args)
                 end
             end
 
-        elseif args[1] == "clean" then
+        elseif args[scStart] == "clean" then
             local conf = loadConfig()
             removeDirectory(conf.exportDirectory)
+        else
+            print("unknown command: " .. args[scStart])
+            os.exit(1)
         end
     else
         processContent()

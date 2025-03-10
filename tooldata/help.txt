@@ -13,3 +13,4 @@ commands:
 options:
 	--help -h	show this help message
 	--version -v	write version to stdout
+	-C		change directory of process before executing
