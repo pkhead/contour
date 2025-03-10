@@ -103,6 +103,11 @@ function contour.exportApi()
         end
     end
 
+    local fs_lines = love.filesystem.lines
+    function love.filesystem.lines(name)
+        return fs_lines(getPath(name))
+    end
+
     local au_newSource = love.audio.newSource
     function love.audio.newSource(filename, ...)
         if type(filename) == "string" then
