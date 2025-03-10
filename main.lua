@@ -1,4 +1,4 @@
-local VERSION = "1.1.0"
+local VERSION = "2.0.0"
 
 local nativefs = require("nativefs")
 local pathm = require("path")
