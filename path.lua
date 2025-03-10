@@ -13,14 +13,14 @@ end
 ---@param path string
 ---@return string?
 function path.getName(path)
-    return strmatch(path, "[^/]+$")
+    return strmatch(path, "[^/\\]+$")
 end
 
 ---Get the path to the containing directory of the path
 ---@param path string
 ---@return string?
 function path.getDirName(path)
-    local idx = strmatch(path, "()[^/]+$")
+    local idx = strmatch(path, "()[^/\\]+$")
     if idx == nil or idx == 1 then
         return nil
     end
@@ -30,21 +30,21 @@ end
 
 function path.split(path)
     local res = {}
-    for v in strgmatch(path, "[^/]+") do
+    for v in strgmatch(path, "[^/\\]+") do
         res[#res+1] = v
     end
     return res
 end
 
 function path.splitIterator(path)
-    return strgmatch(path, "[^/]+")
+    return strgmatch(path, "[^/\\]+")
 end
 
 ---Get the file name of a path without its extension
 ---@param path string
 ---@return string
 function path.getNameWithoutExtension(path)
-    path = strmatch(path, "[^/]+$")
+    path = strmatch(path, "[^/\\]+$")
     return strmatch(path, "(.*)%.[^.]+$")
 end
 
@@ -61,7 +61,7 @@ function path.normalize(path)
     local stack = {}
     local depth = 0
 
-    for v in strgmatch(path, "[^/]+") do
+    for v in strgmatch(path, "[^/\\]+") do
         if v == ".." then
             if depth <= 0 then
                 stack[#stack+1] = v
