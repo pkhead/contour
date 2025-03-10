@@ -18,19 +18,31 @@ git submodule add https://github.com/contour
 With this method, to run contour in a terminal, you must type `love contour` (or `lovec contour` on Windows).
 
 ### Add contour to PATH (Windows)
+> [!IMPORTANT]
+> This assumes you have LÖVE added to your PATH. If not, either add it to your path or modify `contour.cmd` to invoke the full path to lovec.
+
 You may clone contour anywhere you'd like, and add its directory to your system or user PATH. You can install it to %LOCALAPPDATA%\Programs if you don't to deal with administrator permissions.
 
 With this method, to run contour in a terminal, you simply type `contour`.
 
-### Create shell script (Linux)
+### Create shell/batch script
+### Windows
+You may clone contour anywhere you'd like. Then in a directory located in PATH, create a batch script named `contour.cmd` with the contents:
+```batch
+@echo off
+lovec "[path to contour directory]" %*
+```
+contour can then be ran by simply typing `contour` in a terminal.
+
+### Linux
 You may clone contour anywhere you'd like. Then in a directory located in PATH, create a shell script named `contour` (no extension) with the contents:
 ```bash
 #!/usr/bin/env bash
-love [path to contour directory] $@
+love "[path to contour directory]" $@
 ```
 Afterwards, run `chmod +x [path to shell script]`.
 
-With this method, to run contour in a terminal, you simply type `contour`.
+contour can then be ran by simply typing `contour` in a terminal.
 
 # Usage
 The current directory of your terminal must be your LÖVE project. You may also pass in `-C <dir>` to make contour operate on the given directory.
