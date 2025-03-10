@@ -20,7 +20,7 @@ With this method, to run contour in a terminal, you must type `love contour` (or
 ### Add contour to PATH
 You may clone contour anywhere you'd like, and add its directory to your system or user PATH.
 
-> ![TIP]
+> [!TIP]
 > On Windows, you can install it to %LOCALAPPDATA%\Programs if you don't to deal with administrator permissions.
 >
 > If you are on Linux or MacOS, you should also run `chmod +x contour.sh` for it to work properly.
