@@ -1,6 +1,6 @@
 return {
     assetDirectories = {"assets"},
-    exportDirectory = "contour/export",
+    exportDirectory = "exports",
     processors = {
         tmx = {"*.tmx"}
     }

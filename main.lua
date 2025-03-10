@@ -1,8 +1,3 @@
--- IMPORTANT: run like
---
---    lovec contour
---
--- i.e., with cwd being the project root directory
 local VERSION = "1.1.0"
 
 local nativefs = require("nativefs")
@@ -118,37 +113,41 @@ do
     end
 end
 
-local function tfind(t, v)
-    for i, testV in pairs(t) do
-        if testV == v then
-            return i
-        end
-    end
-    return nil
-end
-
-local conf = require("contour.conconf")
-local exportDirectory = assert(conf.exportDirectory, "conconf.lua: missing exportDirectory string")
-assert(conf.assetDirectories, "conconf.lua: missing assetDirectories table")
-assert(conf.processors, "conconf.lua: missing processors table")
-
 ---@class Database
 ---@field map {[string]: string}
 ---@field uids {[string]: string}
 
+---@class ContourConfig
+---@field assetDirectories string[]
+---@field exportDirectory string
+---@field processors {[string]: string[]}
+
+---@param conf ContourConfig
 ---@return Database?
-local function loadDatabase()
-    local oldDbChunk = nativefs.load("contour/db.lua")
-    local oldDb = nil
-    if oldDbChunk ~= nil then
-        oldDb = oldDbChunk()
+local function loadDatabase(conf)
+    local path = pathm.join(conf.exportDirectory, ".db")
+    local chunk = nativefs.load(path)
+    return chunk and chunk()
+end
+
+---@return ContourConfig
+local function loadConfig()
+    local chunk = nativefs.load("contour/conconf.lua")
+    if chunk == nil then
+        error("contour/conconf.lua: file does not exist", 1)
     end
 
-    return oldDb
+    return chunk()
 end
 
 local function processContent()
-    local oldDb = loadDatabase()
+    local conf = loadConfig()
+
+    local exportDirectory = assert(conf.exportDirectory, "conconf.lua: missing exportDirectory string")
+    assert(conf.assetDirectories, "conconf.lua: missing assetDirectories table")
+    assert(conf.processors, "conconf.lua: missing processors table")
+
+    local oldDb = loadDatabase(conf)
 
     local newDb = {
         map = {}
@@ -236,7 +235,7 @@ local function processContent()
         newDb.uids[path] = nil
     end
 
-    nativefs.write("contour/db.lua", "return " .. util.serialize(newDb))
+    nativefs.write(pathm.join(conf.exportDirectory, ".db"), "return " .. util.serialize(newDb))
 end
 
 local function removeDirectory(dirPath)
@@ -259,10 +258,20 @@ local function removeDirectory(dirPath)
     os.execute("rmdir " .. dirPath)
 end
 
+local function copyFileToProject(srcFile, destFile)
+    local f = nativefs.newFile(destFile)
+    f:open("w")
+    for line in love.filesystem.lines(srcFile) do
+        f:write(line)
+        f:write("\n")
+    end
+    f:close()
+end
+
 function love.load(args)
     if args[1] ~= nil then
         if args[1] == "--help" or args[1] == "-h" or args[1] == "/?" or args[1] == "help" then
-            local helpText = love.filesystem.read("string", "help.txt")
+            local helpText = love.filesystem.read("string", "tooldata/help.txt")
             io.write(helpText)
             io.write("\n")
 
@@ -270,8 +279,24 @@ function love.load(args)
             io.write(VERSION)
             io.write("\n")
         
+        elseif args[1] == "init" then
+            -- create directory structure
+            nativefs.createDirectory("contour")
+            nativefs.createDirectory("contour/processors")
+
+            -- copy tmx processor
+            copyFileToProject("tooldata/tmx-processor.lua", "contour/processors/tmx.lua")
+            
+            -- copy contour runtime lib to project
+            copyFileToProject("tooldata/runtime.lua", "contour/init.lua")
+
+            -- copy default conconf.lua to project
+            if nativefs.getInfo("contour/conconf.lua") == nil then
+                copyFileToProject("tooldata/default-conf.lua", "contour/conconf.lua")
+            end
+        
         elseif args[1] == "list-mapped" then
-            local db = loadDatabase()
+            local db = loadDatabase(loadConfig())
             if db then 
                 local keys = {}
                 for k, v in pairs(db.map) do
@@ -285,8 +310,8 @@ function love.load(args)
             end
 
         elseif args[1] == "clean" then
-            nativefs.remove("contour/db.lua")
-            removeDirectory(exportDirectory)
+            local conf = loadConfig()
+            removeDirectory(conf.exportDirectory)
         end
     else
         processContent()

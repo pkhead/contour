@@ -6,6 +6,7 @@ usage:
 
 commands:
 	(none)		process content
+	init		initialize contour for the project
 	clean		clean exported files
 	list-mapped	list files that were mapped
 	

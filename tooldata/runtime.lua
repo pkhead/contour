@@ -1,13 +1,39 @@
-local Path = require("contour.path")
-local db = require("contour.db")
-
 local contour = {}
+
+local db = love.filesystem.load(require("contour.conconf").exportDirectory .. "/" .. ".db")()
+
+local strgmatch = string.gmatch
+local function normalizePath(path)
+    local stack = {}
+    local depth = 0
+
+    for v in strgmatch(path, "[^/]+") do
+        if v == ".." then
+            if depth <= 0 then
+                stack[#stack+1] = v
+            else
+                stack[#stack] = nil
+            end
+
+            depth = depth - 1
+        elseif v ~= "." then
+            stack[#stack+1] = v
+            depth = depth + 1
+        end
+    end
+
+    if #stack == 0 then
+        return "."
+    else
+        return table.concat(stack, "/")
+    end
+end
 
 ---Obtain the mapped file path.
 ---@param path string The path to a file.
 ---@return string path The mapped path to the file, or the source file if the file isn't mapped.
 local function getPath(path)
-    path = Path.normalize(path)
+    path = normalizePath(path)
 
     if db.map[path] ~= nil or db.map["/" .. path] ~= nil then
         return db.map[path]
@@ -20,7 +46,7 @@ end
 ---@param path string The path to a file.
 ---@return boolean status True if the path is mapped, false if not.
 local function isMapped(path)
-    path = Path.normalize(path)
+    path = normalizePath(path)
     return db.map[path] ~= nil or db.map["/" .. path] ~= nil
 end
 
