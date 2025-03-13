@@ -4,7 +4,7 @@ A framework for creating "content pipelines" in LÖVE projects. This allows offl
 Please report any issues on Issues, or anywhere else like on Discord or the forums if you'd rather do that.
 
 # Installation
-The contour tool must be installed, for which there are two methods of doing so:
+The contour tool must be installed, for which there are three methods of doing so:
 
 ### Clone into project
 Contour can be cloned into your LÖVE project by either
@@ -25,29 +25,25 @@ You may clone contour anywhere you'd like, and add its directory to your system 
 
 With this method, to run contour in a terminal, you simply type `contour`.
 
-### Create shell/batch script
-### Windows
-You may clone contour anywhere you'd like. Then in a directory located in PATH, create a batch script named `contour.cmd` with the contents:
-```batch
-@echo off
-lovec "[path to contour directory]" %*
-```
-contour can then be ran by simply typing `contour` in a terminal.
+### Install into /usr/local (Linux/Mac)
+> [!IMPORTANT]
+> This requires you have LÖVE added to your PATH.
 
-### Linux
-You may clone contour anywhere you'd like. Then in a directory located in PATH, create a shell script named `contour` (no extension) with the contents:
-```bash
-#!/usr/bin/env bash
-love "[path to contour directory]" $@
+These series of commands will install contour into your /usr/local/ directory:
+```sh
+git clone https://github.com/pkhead/contour
+sudo mv contour /usr/local/share/contour
+sudo echo "love /usr/local/share/contour \$@" > /usr/local/bin/contour
+sudo chmod +x /usr/local/bin/contour
 ```
-Afterwards, run `chmod +x [path to shell script]`.
-
-contour can then be ran by simply typing `contour` in a terminal.
+Then, you may run contour from a terminal simply by typing `contour`.
 
 # Usage
-The current directory of your terminal must be your LÖVE project. You may also pass in `-C <dir>` to make contour operate on the given directory.
+You can type `contour help` to print out a help screen.
 
 To set up contour for a project, run `contour init`. It will set up required contour files with a configuration that converts all .tmx files within the "assets" directory to Lua files using the Tiled CLI. In order to configure contour and create processors, read the Configuration section below.
+
+To build a project, you must be cd'd to the root directory of your LÖVE project. You may also pass in `-C <dir>` to make contour operate on the given directory. Then, typing `contour` alone will build the project.
 
 ## Configuration
 There are three files/directories of note, located relative to your project directory after setup:
