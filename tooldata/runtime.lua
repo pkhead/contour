@@ -19,7 +19,11 @@
 
 local contour = {}
 
-local db = love.filesystem.load(require("contour.conconf").exportDirectory .. "/" .. ".db")()
+local db
+do
+    local chunk = love.filesystem.load(require("contour.conconf").exportDirectory .. "/" .. ".db")
+    db = chunk and chunk()
+end
 
 local strgmatch = string.gmatch
 local function normalizePath(path)
